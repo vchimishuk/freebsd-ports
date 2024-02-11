@@ -18,6 +18,8 @@ GH_ACCOUNT=	claudiozz
 GH_TAGNAME=	d8428a7
 MAKE_ARGS=	MANDIR=${PREFIX}/share/man/man
 
+USE_RC_SUBR=	bsdfan
+
 PLIST_FILES=	bin/bsdfan share/man/man1/bsdfan.1.gz \
 		@sample\ etc/bsdfan.conf.sample
 
