@@ -31,6 +31,7 @@ DESKTOP_ENTRIES=	"Prince" "Open-Source port of Prince of Persia" \
 OPTIONS_DEFINE=	DOCS
 
 post-patch:
+	@${REINPLACE_CMD} -e 's|%%DATADIR%%|${DATADIR}|' ${WRKSRC}/lighting.c
 	@${REINPLACE_CMD} -e 's|%%DATADIR%%|${DATADIR}|' ${WRKSRC}/seg009.c
 
 do-install:
