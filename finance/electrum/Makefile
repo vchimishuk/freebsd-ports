@@ -1,5 +1,5 @@
 PORTNAME=	electrum
-DISTVERSION=	4.8.2
+DISTVERSION=	4.8.4
 CATEGORIES=	finance python
 MASTER_SITES=	https://download.electrum.org/${PORTVERSION}/ \
 		http://download.electrum.org/${PORTVERSION}/
@@ -34,9 +34,11 @@ RUN_DEPENDS=	${PYTHON_PKGNAMEPREFIX}aiohttp-socks>=0.9.2:net/py-aiohttp-socks@${
 		${PYTHON_PKGNAMEPREFIX}sqlite3>=3.7.9:databases/py-sqlite3@${PY_FLAVOR}
 
 USES=		cpe python shebangfix
-USE_PYTHON=	autoplist concurrent cryptography distutils
+USE_PYTHON=	autoplist concurrent cryptography pep517
 
-PYDISTUTILS_PKGNAME=	Electrum
+PEP517_INSTALL_CMD=	${PYTHON_CMD} -m installer --destdir ${STAGEDIR} \
+			--prefix ${PREFIX} \
+			${BUILD_WRKSRC}/dist/Electrum-${DISTVERSION}*.whl
 
 SHEBANG_FILES=	electrum/electrum \
 		electrum/plugins/keepkey/keepkeylib/device-protocol/build_pb.sh
@@ -64,6 +66,20 @@ HARDWARE_PLIST_FILES=	"@sample etc/devd/hardware_wallet.conf.sample"
 
 post-patch-GUI-off:
 	@${REINPLACE_CMD} -e '/electrum\.desktop/d' ${WRKSRC}/setup.py
+
+do-install:
+	@${MKDIR} ${STAGEDIR}${PYTHONPREFIX_SITELIBDIR}
+	@cd ${INSTALL_WRKSRC} && ${SETENVI} ${WRK_ENV} ${MAKE_ENV} ${PEP517_INSTALL_CMD}
+	@${PYTHON_CMD} -B ${PORTSDIR}/Mk/Scripts/strip_RECORD.py \
+		${STAGEDIR}${PYTHONPREFIX_SITELIBDIR}/Electrum-${DISTVERSION}*.dist-info/RECORD >> ${_PYTHONPKGLIST}
+	@${REINPLACE_CMD} \
+		-e '/\.pyc$$/d' \
+		-e 's|^|${PYTHONPREFIX_SITELIBDIR}/|' \
+		-e 's|^${PYTHONPREFIX_SITELIBDIR}/../../../bin/|bin/|' \
+		-e 's|^${PYTHONPREFIX_SITELIBDIR}/../../../lib/|lib/|' \
+		-e 's|^${PYTHONPREFIX_SITELIBDIR}/../../../share/|share/|' \
+		${_PYTHONPKGLIST}
+	@cd ${STAGEDIR}${PREFIX} && ${FIND} lib -name '*.pyc' >> ${_PYTHONPKGLIST}
 
 post-install-HARDWARE-on:
 	${INSTALL_DATA} ${FILESDIR}/hardware_wallet.conf.sample \
